@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Atendimentos CREAS</title>
+    <link rel="stylesheet" href="creas.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+</head>
+<body>
+
+<header>
+    <h1>Registro de Atendimentos CREAS</h1>
+</header>
+
+<main>
+    <section id="formSection">
+        <form id="creasForm">
+            <input type="text" id="nome" placeholder="Nome" required>
+            <input type="text" id="cpf" placeholder="CPF" required>
+            <textarea id="diagnostico" placeholder="Diagnóstico situacionista" required></textarea>
+            <button type="submit">Registrar Atendimento</button>
+        </form>
+    </section>
+</main>
+
+<script src="creas.js"></script>
+</body>
+</html>

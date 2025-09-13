@@ -1,0 +1,7 @@
+body { background:#eef3fb; font-family:'Segoe UI', sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; }
+.login-container { background:#fff; padding:30px; border-radius:12px; box-shadow:0 6px 20px rgba(0,0,0,0.1); width:300px; text-align:center; }
+.login-container h1 { margin-bottom:20px; font-size:20px; color:#2e5a86; }
+.login-container input { width:100%; padding:10px; margin-bottom:12px; border-radius:6px; border:1px solid #ccc; }
+.login-container button { width:100%; padding:10px; border:none; border-radius:6px; background:#2e5a86; color:#fff; font-weight:700; cursor:pointer; transition:0.2s; }
+.login-container button:hover { background:#214563; }
+.error { color:red; font-size:13px; margin-top:6px; }

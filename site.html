@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Atendimentos</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+
+<header>
+    <div style="display:flex; justify-content:center; align-items:center; gap:12px;">
+        <h1 style="margin:0; font-size:20px;">Registro de Atendimentos</h1>
+        <!-- Botões admin, inicialmente invisíveis -->
+        <button id="btnCreas" style="display:none; padding:6px 10px; font-size:12px; cursor:pointer;"
+                onclick="window.open('creas.html','_blank')">CREAS</button>
+        <button id="btnPerfis" style="display:none; padding:6px 10px; font-size:12px; cursor:pointer;"
+                onclick="window.open('perfil.html','_blank')">Perfis</button>
+        <button id="btnLogout" style="padding:6px 10px; font-size:12px; cursor:pointer;">Logout</button>
+       
+    </div>
+</header>
+
+<main>
+    <!-- Formulário de atendimento -->
+    <section id="formSection">
+        <form id="atendimentoForm">
+            <input type="text" id="nome" placeholder="Nome" required>
+            <input type="text" id="cpf" placeholder="CPF">
+            <input type="text" id="nis" placeholder="NIS">
+            <select id="local" required>
+                <option value="">Selecione o local</option>
+                <option value="Secretaria">Secretaria</option>
+                <option value="CRAS Poeirão">CRAS Poeirão</option>
+                <option value="CRAS Santa Maria">CRAS Santa Maria</option>
+            </select>
+            <select id="motivoSelect" required>
+                <option value="">Motivo do Atendimento</option>
+                <option value="Novo Bolsa Familia">Novo Bolsa Família</option>
+                <option value="Transferência">Transferência</option>
+                <option value="Inclusão">Inclusão</option>
+                <option value="Atualização">Atualização</option>
+                <option value="SIBEC">SIBEC</option>
+                <option value="Carteira do Idoso">Carteira do Idoso</option>
+                <option value="Outros">Outros</option>
+            </select>
+            <input type="text" id="motivoOutro" placeholder="Digite o motivo" style="display:none;">
+            <button type="submit">Registrar Atendimento</button>
+        </form>
+    </section>
+
+    <!-- Filtros de data -->
+    <section id="filtrosSection">
+        <div class="busca-filtros">
+            <button class="filtro-btn active" data-filtro="dia">Hoje</button>
+            <button class="filtro-btn" data-filtro="semana">Semana</button>
+            <button class="filtro-btn" data-filtro="mes">Mês</button>
+            <input type="month" id="mesSelecionado" style="display:none;">
+            <button id="btnImprimirMes" style="display:none;">Imprimir Mês</button>
+        </div>
+    </section>
+
+    <!-- Tabela de atendimentos -->
+    <section id="tabelaSection">
+        <table id="tabelaAtendimentos">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>NIS</th>
+                    <th>Local</th>
+                    <th>Motivo</th>
+                    <th>Data</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Linhas preenchidas via JS -->
+            </tbody>
+        </table>
+    </section>
+</main>
+
+<script src="script.js"></script>
+</body>
+</html>

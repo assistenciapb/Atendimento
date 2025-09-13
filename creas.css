@@ -1,0 +1,35 @@
+/* Reset + fonte */
+* { box-sizing: border-box; margin:0; padding:0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { background: #eef3fb; color:#222; scroll-behavior: smooth; padding-top:70px; }
+
+/* Header fixo */
+header {
+  position: fixed; top:0; left:0; right:0;
+  background:#1f2a38; padding:12px 0; z-index:1000;
+  text-align:center; color:#fff; font-size:20px; font-weight:600;
+  box-shadow:0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Seções */
+section { max-width: 700px; margin: 0 auto 40px; padding: 20px; }
+
+/* Formulário */
+#creasForm {
+  background: rgba(255,255,255,0.98); padding:26px; border-radius:12px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.08);
+  display:grid; grid-template-columns: 1fr; gap:12px;
+}
+#creasForm input, #creasForm textarea, #creasForm button {
+  padding:10px; border-radius:8px; border:1px solid #cfd8e3; font-size:14px; width:100%;
+}
+#creasForm textarea { min-height:120px; resize: vertical; }
+#creasForm button {
+  background:#2e5a86; color:#fff; border:none; cursor:pointer; font-weight:700; transition:0.18s;
+}
+#creasForm button:hover { background:#214563; transform:translateY(-2px); }
+
+/* Responsivo */
+@media (max-width:560px){
+  header { font-size:18px; padding:10px; }
+  #creasForm textarea { min-height:100px; }
+}

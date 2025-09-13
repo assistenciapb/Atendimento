@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfis Atendidos</title>
+    <link rel="stylesheet" href="perfil.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Perfis Atendidos</h1>
+        <div style="display:flex; gap:12px; align-items:center;">
+            <input type="text" id="searchPerfil" placeholder="Buscar por nome ou CPF">
+            <button onclick="document.getElementById('dashboardContainer').scrollIntoView({behavior:'smooth'})" style="padding:6px 12px; border-radius:6px; border:none; background:#2e5a86; color:#fff; cursor:pointer;">Dashboard</button>
+        </div>
+    </header>
+
+    <main>
+        <!-- Sessão de Perfis -->
+        <section id="perfisContainer" class="grid-perfis"></section>
+
+        <!-- Espaço entre perfis e dashboard -->
+        <div style="height:120px;"></div>
+
+        <!-- Sessão Dashboard -->
+        <section id="dashboardContainer" style="max-width:1100px; margin:0 auto 60px; padding:20px;">
+            <h2>Dashboard de Atendimentos</h2>
+
+            <!-- Filtros de período -->
+            <div style="margin-bottom:16px;">
+                <button class="filtro-periodo active" data-periodo="dia">Dia</button>
+                <button class="filtro-periodo" data-periodo="semana">Semana</button>
+                <button class="filtro-periodo" data-periodo="mes">Mês</button>
+                <button class="filtro-periodo" data-periodo="total">Total</button>
+            </div>
+
+            <!-- Card de total geral -->
+            <div style="background:#fff; padding:20px; border-radius:12px; box-shadow:0 6px 20px rgba(0,0,0,0.08); margin-bottom:24px; text-align:center;">
+                <h3>Total de Atendimentos</h3>
+                <span id="totalAtendimentos" style="font-size:32px; font-weight:bold;">0</span>
+            </div>
+
+            <!-- Gráficos -->
+            <div style="display:flex; flex-wrap:wrap; gap:24px;">
+                <div style="flex:1; min-width:300px; background:#fff; padding:16px; border-radius:12px; box-shadow:0 6px 20px rgba(0,0,0,0.08);">
+                    <h4>Atendimentos por Local</h4>
+                    <canvas id="graficoLocal" height="200"></canvas>
+                </div>
+                <div style="flex:1; min-width:300px; background:#fff; padding:16px; border-radius:12px; box-shadow:0 6px 20px rgba(0,0,0,0.08);">
+                    <h4>Atendimentos por Motivo/Diagnóstico</h4>
+                    <canvas id="graficoMotivo" height="200"></canvas>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal do perfil -->
+    <div id="perfilModal" class="modal">
+        <div class="modal-content">
+            <button id="closeModal" class="close-btn">X</button>
+            <h2 id="modalNome"></h2>
+            <p id="modalCPF"></p>
+            <div id="linhaTempo" class="linha-tempo"></div>
+        </div>
+    </div>
+
+    <script src="perfil.js"></script>
+</body>
+</html>
