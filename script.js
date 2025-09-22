@@ -82,13 +82,15 @@ form.addEventListener('submit', async (e) => {
         // Salvar atendimento geral
         const docRef = await db.collection('atendimentos_gerais').add({nome, cpf, nis, local, motivo, data});
 
-        // Salvar último local
-        localStorage.setItem('ultimoLocal', local);
+                // Salvar último local
+localStorage.setItem('ultimoLocal', local);
 
-        // Reset do formulário
-        form.reset();
-        motivoOutro.style.display = 'none';
-        if(ultimoLocal) localAtendimento.value = ultimoLocal;
+// Reset do formulário
+form.reset();
+motivoOutro.style.display = 'none';
+
+// Atualizar o select com o último local registrado
+localAtendimento.value = local;
 
         // Criar ou atualizar perfil
         const perfilRef = db.collection('perfis').doc(cpf);
@@ -267,3 +269,4 @@ btnLogout.addEventListener('click', () => {
 
 // Carregar atendimentos ao iniciar
 carregarAtendimentos();
+
