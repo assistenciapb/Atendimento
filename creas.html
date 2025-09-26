@@ -15,6 +15,7 @@
 </header>
 
 <main>
+    <!-- Seção de registro de atendimentos -->
     <section id="formSection">
         <form id="creasForm">
             <input type="text" id="nome" placeholder="Nome" required>
@@ -23,7 +24,132 @@
             <button type="submit">Registrar Atendimento</button>
         </form>
     </section>
+
+    <!-- Seção de Perfis CREAS -->
+    <section id="perfisSection">
+        <div class="perfil-bar">
+            <input type="text" id="buscarCpf" placeholder="Buscar por CPF">
+            <button id="novoPerfilBtn">Novo Perfil</button>
+        </div>
+        <div id="perfisContainer" class="perfil-grid"></div>
+    </section>
 </main>
+
+<!-- Modal de Perfis (criação/edição) -->
+<div id="perfilModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeModal">&times;</span>
+    <h2 id="modalTitle">Novo Perfil CREAS</h2>
+    <form id="perfilForm">
+      <div class="form-grid">
+        <div>
+          <label>Nome completo</label>
+          <input type="text" id="perfilNome" required>
+        </div>
+        <div>
+          <label>Sexo</label>
+          <select id="perfilSexo" required>
+              <option value="">Selecione</option>
+              <option>Masculino</option>
+              <option>Feminino</option>
+              <option>Outro</option>
+          </select>
+        </div>
+        <div>
+          <label>Grupo Social</label>
+          <select id="perfilGrupo" required>
+              <option value="">Selecione</option>
+              <option>Mulher</option>
+              <option>Idoso</option>
+              <option>Criança</option>
+              <option>Adolescente</option>
+          </select>
+        </div>
+        <div>
+          <label>Data de Nascimento</label>
+          <input type="date" id="perfilNascimento" required>
+        </div>
+        <div>
+          <label>Agente de Saúde</label>
+          <input type="text" id="perfilAgente">
+        </div>
+        <div>
+          <label>CPF</label>
+          <input type="text" id="perfilCpf" required>
+        </div>
+        <div>
+          <label>NIS</label>
+          <input type="text" id="perfilNis">
+        </div>
+        <div>
+          <label>Endereço</label>
+          <input type="text" id="perfilEndereco">
+        </div>
+        <div>
+          <label>Escolaridade</label>
+          <input type="text" id="perfilEscolaridade">
+        </div>
+        <div>
+          <label>Tipo de Residência</label>
+          <input type="text" id="perfilResidencia">
+        </div>
+        <div>
+          <label>Tipo de Auxílio</label>
+          <select id="perfilAuxilio">
+              <option value="">Selecione</option>
+              <option>BPC</option>
+              <option>Bolsa Família</option>
+              <option>Nenhum</option>
+          </select>
+        </div>
+        <div>
+          <label>Cartão do SUS</label>
+          <input type="text" id="perfilSus">
+        </div>
+        <div>
+          <label>Usuário de SPA?</label>
+          <select id="perfilSPA" required>
+              <option value="">Selecione</option>
+              <option>Não</option>
+              <option>Sim</option>
+          </select>
+        </div>
+        <div>
+          <label>Qual substância?</label>
+          <input type="text" id="perfilSubstancia" style="display:none;">
+        </div>
+        <div>
+          <label>Telefone</label>
+          <input type="text" id="perfilTelefone">
+        </div>
+        <div class="full">
+          <label>Composição Familiar</label>
+          <textarea id="perfilFamilia"></textarea>
+        </div>
+      </div>
+      <button type="submit" id="perfilSubmitBtn">Salvar Perfil</button>
+    </form>
+  </div>
+</div>
+
+<!-- Card expandido para visualizar perfil -->
+<div id="perfilExpandido" class="modal">
+  <div class="modal-content card-expandido">
+    <span class="close" id="closeExpandido">&times;</span>
+    <div id="expandidoConteudo"></div>
+    <button id="editarPerfilBtn">Editar Perfil</button>
+    <button id="consultarAtendimentosBtn">Consultar Atendimentos</button>
+  </div>
+</div>
+
+<!-- Modal Atendimentos -->
+<div id="modalAtendimentos" class="modal">
+  <div class="modal-content" style="max-width:800px;">
+    <span class="close" id="closeAtendimentos">&times;</span>
+    <h2>Atendimentos do CPF: <span id="cpfAtendimento"></span></h2>
+    <div id="listaAtendimentos"></div>
+  </div>
+</div>
 
 <script src="creas.js"></script>
 </body>
