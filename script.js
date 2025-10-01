@@ -1,25 +1,6 @@
 // =======================
-// Verificação de Login
-// =======================
-document.addEventListener("DOMContentLoaded", () => {
-    const role = localStorage.getItem('userRole');
-
-    if(!role){
-        alert("Você precisa fazer login!");
-        window.location.href = "login.html";
-        return;
-    }
-
-    // Mostra botões apenas para admin
-    if(role === 'admin') {
-        const btnCreas = document.getElementById('btnCreas');
-        const btnPerfis = document.getElementById('btnPerfis');
-        if(btnCreas) btnCreas.style.display = 'inline-block';
-        if(btnPerfis) btnPerfis.style.display = 'inline-block';
-    }
-});
-
 // Configuração Firebase
+// =======================
 const firebaseConfig = {
     apiKey: "AIzaSyDI5-NlhqEInMh4VYEg2zBjwWn8fmmBhjQ",
     authDomain: "agendamentos-348f3.firebaseapp.com",
@@ -31,7 +12,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// =======================
 // Elementos do DOM
+// =======================
 const form = document.getElementById('atendimentoForm');
 const tabelaBody = document.querySelector('#tabelaAtendimentos tbody');
 const filtroBtns = document.querySelectorAll('.filtro-btn');
@@ -47,11 +30,11 @@ let statusRealizado = JSON.parse(localStorage.getItem('statusRealizado')) || {};
 
 // Pré-selecionar último local
 const ultimoLocal = localStorage.getItem('ultimoLocal');
-if(ultimoLocal) localAtendimento.value = ultimoLocal;
+if (ultimoLocal) localAtendimento.value = ultimoLocal;
 
 // Mostrar/ocultar campo "Outros"
 motivoSelect.addEventListener('change', () => {
-    if(motivoSelect.value === 'Outros'){
+    if (motivoSelect.value === 'Outros') {
         motivoOutro.style.display = 'inline-block';
         motivoOutro.required = true;
     } else {
@@ -65,7 +48,36 @@ function salvarStatus() {
     localStorage.setItem('statusRealizado', JSON.stringify(statusRealizado));
 }
 
+// =======================
+// Verificação de login
+// =======================
+document.addEventListener("DOMContentLoaded", () => {
+    firebase.auth().onAuthStateChanged(user => {
+        if (!user) {
+            alert("Você precisa fazer login!");
+            window.location.href = "index.html";
+            return;
+        }
+
+        // Pega role do localStorage
+        const role = localStorage.getItem('userRole');
+
+        // Mostra botões apenas para admin
+        if (role === 'admin') {
+            const btnCreas = document.getElementById('btnCreas');
+            const btnPerfis = document.getElementById('btnPerfis');
+            if (btnCreas) btnCreas.style.display = 'inline-block';
+            if (btnPerfis) btnPerfis.style.display = 'inline-block';
+        }
+
+        // Carrega os atendimentos após login
+        carregarAtendimentos();
+    });
+});
+
+// =======================
 // Registrar atendimento
+// =======================
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const nome = document.getElementById('nome').value.trim();
@@ -73,30 +85,28 @@ form.addEventListener('submit', async (e) => {
     const nis = document.getElementById('nis').value.trim();
     const local = localAtendimento.value;
     let motivo = motivoSelect.value;
-    if(motivo === 'Outros') motivo = motivoOutro.value.trim();
+    if (motivo === 'Outros') motivo = motivoOutro.value.trim();
     const data = new Date().toISOString();
 
-    if(!nome || !motivo || !local) return alert('Nome, Local e Motivo são obrigatórios.');
+    if (!nome || !motivo || !local) return alert('Nome, Local e Motivo são obrigatórios.');
 
     try {
         // Salvar atendimento geral
-        const docRef = await db.collection('atendimentos_gerais').add({nome, cpf, nis, local, motivo, data});
+        await db.collection('atendimentos_gerais').add({ nome, cpf, nis, local, motivo, data });
 
-                // Salvar último local
-localStorage.setItem('ultimoLocal', local);
+        // Salvar último local
+        localStorage.setItem('ultimoLocal', local);
 
-// Reset do formulário
-form.reset();
-motivoOutro.style.display = 'none';
-
-// Atualizar o select com o último local registrado
-localAtendimento.value = local;
+        // Reset do formulário
+        form.reset();
+        motivoOutro.style.display = 'none';
+        localAtendimento.value = local;
 
         // Criar ou atualizar perfil
         const perfilRef = db.collection('perfis').doc(cpf);
         const perfilDoc = await perfilRef.get();
-        if(!perfilDoc.exists){
-            await perfilRef.set({nome, cpf, atendimentos: []});
+        if (!perfilDoc.exists) {
+            await perfilRef.set({ nome, cpf, atendimentos: [] });
         }
         await perfilRef.update({
             atendimentos: firebase.firestore.FieldValue.arrayUnion({
@@ -107,57 +117,68 @@ localAtendimento.value = local;
             })
         });
 
-        // Recarregar atendimentos
+        // Atualizar tabela
         carregarAtendimentos();
 
-    } catch(err){
+    } catch (err) {
         console.error(err);
         alert("Erro ao registrar atendimento.");
     }
 });
 
-// Carregar atendimentos gerais
+// =======================
+// Carregar atendimentos
+// =======================
 function carregarAtendimentos() {
     tabelaBody.innerHTML = '';
     db.collection('atendimentos_gerais').get()
-      .then(snapshot => {
-          atendimentos = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
-          atendimentos.sort((a,b) => new Date(a.data) - new Date(b.data));
-          aplicarFiltro('dia');
-      })
-      .catch(err => console.error(err));
+        .then(snapshot => {
+            atendimentos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            atendimentos.sort((a, b) => new Date(a.data) - new Date(b.data));
+            aplicarFiltro('dia');
+        })
+        .catch(err => console.error(err));
 }
 
+// =======================
 // Filtros de data
-function aplicarFiltro(tipo){
-    let agora = new Date();
+// =======================
+function aplicarFiltro(tipo) {
+    const agora = new Date();
     let filtrados = [];
-    if(tipo === 'dia'){
+
+    if (tipo === 'dia') {
         filtrados = atendimentos.filter(a => new Date(a.data).toDateString() === agora.toDateString());
-        mesSelecionado.style.display = 'none'; btnImprimirMes.style.display = 'none';
-    } else if(tipo === 'semana'){
-        let inicioSemana = new Date(agora); inicioSemana.setDate(agora.getDate() - agora.getDay());
-        let fimSemana = new Date(inicioSemana); fimSemana.setDate(inicioSemana.getDate() + 6);
+        mesSelecionado.style.display = 'none';
+        btnImprimirMes.style.display = 'none';
+    } else if (tipo === 'semana') {
+        const inicioSemana = new Date(agora); inicioSemana.setDate(agora.getDate() - agora.getDay());
+        const fimSemana = new Date(inicioSemana); fimSemana.setDate(inicioSemana.getDate() + 6);
         filtrados = atendimentos.filter(a => {
-            let d = new Date(a.data);
+            const d = new Date(a.data);
             return d >= inicioSemana && d <= fimSemana;
         });
-        mesSelecionado.style.display = 'none'; btnImprimirMes.style.display = 'none';
-    } else if(tipo === 'mes'){
-        mesSelecionado.style.display = 'inline-block'; btnImprimirMes.style.display = 'inline-block';
-        if(mesSelecionado.value){
+        mesSelecionado.style.display = 'none';
+        btnImprimirMes.style.display = 'none';
+    } else if (tipo === 'mes') {
+        mesSelecionado.style.display = 'inline-block';
+        btnImprimirMes.style.display = 'inline-block';
+        if (mesSelecionado.value) {
             const [ano, mes] = mesSelecionado.value.split('-').map(Number);
             filtrados = atendimentos.filter(a => {
-                let d = new Date(a.data);
-                return d.getFullYear() === ano && (d.getMonth()+1) === mes;
+                const d = new Date(a.data);
+                return d.getFullYear() === ano && (d.getMonth() + 1) === mes;
             });
         } else filtrados = [];
     }
+
     atualizarTabela(filtrados);
 }
 
+// =======================
 // Atualizar tabela
-function atualizarTabela(lista){
+// =======================
+function atualizarTabela(lista) {
     tabelaBody.innerHTML = '';
 
     lista.forEach(a => {
@@ -167,7 +188,7 @@ function atualizarTabela(lista){
         const statusTd = document.createElement('td');
         const statusBtn = document.createElement('span');
         statusBtn.className = 'status-btn';
-        if(statusRealizado[a.id]) statusBtn.classList.add('realizado');
+        if (statusRealizado[a.id]) statusBtn.classList.add('realizado');
         statusBtn.addEventListener('click', () => {
             statusBtn.classList.toggle('realizado');
             statusRealizado[a.id] = statusBtn.classList.contains('realizado');
@@ -215,9 +236,9 @@ function atualizarTabela(lista){
             await db.collection('atendimentos_gerais').doc(a.id).delete();
             const perfilRef = db.collection('perfis').doc(a.cpf);
             const perfilDoc = await perfilRef.get();
-            if(perfilDoc.exists){
+            if (perfilDoc.exists) {
                 const atendimentosPerfil = perfilDoc.data().atendimentos.filter(at => at.data !== a.data || at.motivo !== a.motivo);
-                await perfilRef.update({atendimentos: atendimentosPerfil});
+                await perfilRef.update({ atendimentos: atendimentosPerfil });
             }
             carregarAtendimentos();
         });
@@ -228,11 +249,12 @@ function atualizarTabela(lista){
     });
 }
 
-
+// =======================
 // Eventos de filtros
+// =======================
 filtroBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-        filtroBtns.forEach(b=>b.classList.remove('active'));
+        filtroBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         aplicarFiltro(btn.dataset.filtro);
     });
@@ -240,33 +262,32 @@ filtroBtns.forEach(btn => {
 
 mesSelecionado.addEventListener('change', () => aplicarFiltro('mes'));
 
-// Imprimir PDF do mês
+// =======================
+// Imprimir PDF
+// =======================
 btnImprimirMes.addEventListener('click', () => {
     const mesAno = mesSelecionado.value;
-    if(!mesAno) return alert('Selecione o mês.');
+    if (!mesAno) return alert('Selecione o mês.');
     const [ano, mes] = mesAno.split('-').map(Number);
     const lista = atendimentos.filter(a => {
         const d = new Date(a.data);
-        return d.getFullYear() === ano && (d.getMonth()+1) === mes;
+        return d.getFullYear() === ano && (d.getMonth() + 1) === mes;
     });
-    if(lista.length === 0) return alert('Nenhum atendimento neste mês.');
+    if (lista.length === 0) return alert('Nenhum atendimento neste mês.');
 
     const { jsPDF } = window.jspdf;
-    const doc = new jsPDF({ orientation:'landscape' });
+    const doc = new jsPDF({ orientation: 'landscape' });
     const dados = lista.map(a => [a.nome, a.cpf, a.nis, a.local, a.motivo, new Date(a.data).toLocaleString()]);
-    doc.autoTable({ head:[['Nome','CPF','NIS','Local','Motivo','Data']], body:dados, startY:10 });
+    doc.autoTable({ head: [['Nome', 'CPF', 'NIS', 'Local', 'Motivo', 'Data']], body: dados, startY: 10 });
     doc.save(`Atendimentos_${mesAno}.pdf`);
 });
 
+// =======================
 // Logout
+// =======================
 const btnLogout = document.getElementById('btnLogout');
 btnLogout.addEventListener('click', () => {
-    // Limpa o role do usuário
     localStorage.removeItem('userRole');
-    // Redireciona para a página de login
+    firebase.auth().signOut();
     window.location.href = "index.html";
 });
-
-// Carregar atendimentos ao iniciar
-carregarAtendimentos();
-
