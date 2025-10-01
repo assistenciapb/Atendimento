@@ -1,21 +1,27 @@
-// Inicializa Firebase (configuração do seu projeto)
+// =======================
+// Configuração Firebase
+// =======================
 const firebaseConfig = {
-  apiKey: "AIzaSyDI5-NlhqEInMh4VYEg2zBjwWn8fmmBhjQ",
-  authDomain: "agendamentos-348f3.firebaseapp.com",
-  projectId: "agendamentos-348f3",
-  storageBucket: "agendamentos-348f3.firebasestorage.app",
-  messagingSenderId: "691316969145",
-  appId: "1:691316969145:web:eff04404e65e384c70d568"
+    apiKey: "AIzaSyDI5-NlhqEInMh4VYEg2zBjwWn8fmmBhjQ",
+    authDomain: "agendamentos-348f3.firebaseapp.com",
+    projectId: "agendamentos-348f3",
+    storageBucket: "agendamentos-348f3.firebasestorage.app",
+    messagingSenderId: "691316969145",
+    appId: "1:691316969145:web:eff04404e65e384c70d568"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// =======================
 // Elementos do formulário
+// =======================
 const loginForm = document.getElementById('loginForm');
 const emailInput = document.getElementById('email');
 const senhaInput = document.getElementById('senha');
 
+// =======================
 // Evento submit
+// =======================
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = emailInput.value.trim();
@@ -39,7 +45,7 @@ loginForm.addEventListener('submit', async (e) => {
             return;
         }
 
-        // Salva role no localStorage para controle de acesso nas páginas
+        // Salva role no localStorage para controle de acesso
         const role = doc.data().role;
         localStorage.setItem('userRole', role);
 
@@ -52,5 +58,14 @@ loginForm.addEventListener('submit', async (e) => {
     }
 });
 
-// Logout automático se quiser (opcional)
-// firebase.auth().signOut();
+// =======================
+// Se o usuário já estiver logado, vai direto para site.html
+// =======================
+firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+        // Apenas redireciona se estiver na página de login
+        if (window.location.pathname.includes("login.html")) {
+            window.location.href = "site.html";
+        }
+    }
+});
