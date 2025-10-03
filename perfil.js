@@ -1,11 +1,4 @@
-(function verificarAcesso() {
-    const role = localStorage.getItem('userRole');
-    if(!role){
-        alert("Você precisa fazer login!");
-        window.location.href = "login.html";
-    }
-})();
-
+// 🔥 Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyDI5-NlhqEInMh4VYEg2zBjwWn8fmmBhjQ",
   authDomain: "agendamentos-348f3.firebaseapp.com",
@@ -17,225 +10,190 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// Elementos DOM
-const searchInput = document.getElementById('searchPerfil');
+/* ---------------------------
+   📌 Função para limpar CPF
+---------------------------- */
+function limparCpf(cpf) {
+  return cpf.replace(/\D/g,'');
+}
+
+/* ---------------------------
+   📌 Elementos do DOM
+---------------------------- */
 const perfisContainer = document.getElementById('perfisContainer');
+const searchInput = document.getElementById('searchPerfil');
 const perfilModal = document.getElementById('perfilModal');
 const closeModalBtn = document.getElementById('closeModal');
-const linhaTempoContainer = document.getElementById('linhaTempo');
+const modalNome = document.getElementById('modalNome');
+const modalCPF = document.getElementById('modalCPF');
+const linhaTempo = document.getElementById('linhaTempo');
 
-// Dashboard elementos
-const dashboardContainer = document.getElementById('dashboardContainer');
-const totalAtendimentosSpan = document.getElementById('totalAtendimentos');
-const filtroPeriodoBtns = document.querySelectorAll('.filtro-periodo');
-const ctxLocal = document.getElementById('graficoLocal').getContext('2d');
-const ctxMotivo = document.getElementById('graficoMotivo').getContext('2d');
-
-let perfis = [];
-let filtroLocal = null;
-let ordemCrescente = true;
-let atendimentosGerais = [];
-let chartLocal = null;
-let chartMotivo = null;
-
-// Locais fixos
-const locais = ["Secretaria", "CRAS Poeirão", "CRAS Santa Maria", "CREAS"];
-
-// Criar card de perfil
-function criarCardPerfil(perfil) {
+/* ---------------------------
+   📌 Carregar perfis
+---------------------------- */
+async function carregarPerfis() {
+  const snapshot = await db.collection('perfis').get();
+  perfisContainer.innerHTML = '';
+  
+  snapshot.forEach(doc => {
+    const data = doc.data();
     const card = document.createElement('div');
     card.className = 'perfil-card';
-    card.innerHTML = `<strong>${perfil.nome}</strong><br>CPF: ${perfil.cpf}`;
-    card.addEventListener('click', () => abrirPerfil(perfil));
+    card.innerHTML = `
+      <strong>${data.nome}</strong><br>${data.cpf}
+      <br><button class="removerPerfilBtn" style="margin-top:6px; padding:4px 8px; font-size:12px; background:#c0392b; color:#fff; border:none; border-radius:4px; cursor:pointer;">Remover Perfil</button>
+    `;
+    
+    // Abrir modal ao clicar no card (exceto no botão remover)
+    card.addEventListener('click', (e) => {
+      if(e.target.classList.contains('removerPerfilBtn')) return;
+      abrirModalPerfil(data);
+    });
+
+    // Remover perfil
+    card.querySelector('.removerPerfilBtn').addEventListener('click', async () => {
+      if(confirm(`Deseja remover o perfil de ${data.nome}?`)){
+        await db.collection('perfis').doc(data.cpf).delete();
+        carregarPerfis();
+      }
+    });
+
     perfisContainer.appendChild(card);
+  });
 }
 
-// Carregar perfis
-async function carregarPerfis() {
-    perfisContainer.innerHTML = '';
-    try {
-        const snapshot = await db.collection('perfis').get();
-        perfis = snapshot.docs.map(doc => {
-            const p = doc.data();
-            if (!p.atendimentos) p.atendimentos = [];
-            return p;
-        });
-        perfis.forEach(perfil => criarCardPerfil(perfil));
-        atualizarDashboard();
-    } catch (err) {
-        console.error("Erro ao carregar perfis:", err);
-    }
-}
+/* ---------------------------
+   📌 Abrir modal de perfil
+---------------------------- */
+function abrirModalPerfil(perfil) {
+  modalNome.textContent = perfil.nome;
+  modalCPF.textContent = perfil.cpf;
+  linhaTempo.innerHTML = '';
 
-// Modal perfil
-function abrirPerfil(perfil) {
-    perfilModal.style.display = 'flex';
-    filtroLocal = null;
-    renderLinhaTempo(perfil);
-}
-
-// Fechar modal
-closeModalBtn.addEventListener('click', () => perfilModal.style.display = 'none');
-
-// Linha do tempo
-function renderLinhaTempo(perfil) {
-    linhaTempoContainer.innerHTML = '';
-
-    // Botões de filtro por local
-    const filtroContainer = document.createElement('div');
-    locais.forEach(local => {
-        const btn = document.createElement('button');
-        btn.textContent = local;
-        btn.className = filtroLocal === local ? 'active' : '';
-        btn.addEventListener('click', () => {
-            filtroLocal = filtroLocal === local ? null : local;
-            renderLinhaTempo(perfil);
-        });
-        filtroContainer.appendChild(btn);
-    });
-
-    // Botão para alternar ordem
-    const ordemBtn = document.createElement('button');
-    ordemBtn.textContent = ordemCrescente ? 'Ordem: Crescente' : 'Ordem: Decrescente';
-    ordemBtn.style.marginLeft = '10px';
-    ordemBtn.addEventListener('click', () => {
-        ordemCrescente = !ordemCrescente;
-        renderLinhaTempo(perfil);
-    });
-    filtroContainer.appendChild(ordemBtn);
-
-    linhaTempoContainer.appendChild(filtroContainer);
-
-    // Filtrar atendimentos
-    let atendimentos = [...perfil.atendimentos];
-    if(filtroLocal) {
-        atendimentos = atendimentos.filter(a => a.local === filtroLocal);
-    }
-
-    // Ordenar
-    atendimentos.sort((a,b) => ordemCrescente ? new Date(a.data)-new Date(b.data) : new Date(b.data)-new Date(a.data));
-
-    if(atendimentos.length === 0){
-        const p = document.createElement('p');
-        p.textContent = 'Nenhum atendimento registrado.';
-        linhaTempoContainer.appendChild(p);
-        return;
-    }
-
-    // Criar eventos
-    atendimentos.forEach(a => {
+  if(perfil.atendimentos && perfil.atendimentos.length > 0){
+    perfil.atendimentos
+      .sort((a,b)=> new Date(b.data) - new Date(a.data))
+      .forEach((atendimento, idx)=>{
         const evento = document.createElement('div');
         evento.className = 'evento';
-        const legenda = a.local === 'CREAS' ? 'Diagnóstico' : 'Motivo';
+        const dataFormat = new Date(atendimento.data).toLocaleString();
         evento.innerHTML = `
-            <span class="evento-data">${new Date(a.data).toLocaleString()}</span>
-            <span class="evento-local">${a.local}</span>
-            <span class="evento-motivo"><strong>${legenda}:</strong> ${a.motivo}</span>
+          <span class="evento-data">${dataFormat}</span>
+          <span class="evento-local">Local: ${atendimento.local}</span>
+          <span class="evento-motivo">Motivo: ${atendimento.motivo}</span>
+          <button class="removerAtendimentoBtn" style="margin-top:6px; padding:4px 8px; font-size:12px; background:#c0392b; color:#fff; border:none; border-radius:4px; cursor:pointer;">Remover Atendimento</button>
         `;
-        linhaTempoContainer.appendChild(evento);
-    });
+        // Remover atendimento
+        evento.querySelector('.removerAtendimentoBtn').addEventListener('click', async () => {
+          if(confirm('Deseja remover este atendimento?')){
+            await db.collection('perfis').doc(perfil.cpf).update({
+              atendimentos: firebase.firestore.FieldValue.arrayRemove(atendimento)
+            });
+            abrirModalPerfil({...perfil, atendimentos: perfil.atendimentos.filter((_,i)=>i!==idx)});
+            carregarPerfis();
+          }
+        });
+        linhaTempo.appendChild(evento);
+      });
+  } else {
+    linhaTempo.innerHTML = '<p>Sem atendimentos registrados.</p>';
+  }
+
+  perfilModal.style.display = 'flex';
 }
 
-// Busca por nome/CPF
+/* ---------------------------
+   📌 Fechar modal
+---------------------------- */
+closeModalBtn.addEventListener('click', ()=> perfilModal.style.display='none');
+window.addEventListener('click', (e)=>{ if(e.target === perfilModal) perfilModal.style.display='none'; });
+
+/* ---------------------------
+   📌 Filtro de busca
+---------------------------- */
 searchInput.addEventListener('input', () => {
-    const query = searchInput.value.trim().toLowerCase();
-    perfisContainer.innerHTML = '';
-    perfis.filter(p => p.nome.toLowerCase().includes(query) || p.cpf.includes(query))
-           .forEach(p => criarCardPerfil(p));
+  const filtro = searchInput.value.toLowerCase();
+  const cards = document.querySelectorAll('.perfil-card');
+  cards.forEach(card => {
+    const nome = card.querySelector('strong').textContent.toLowerCase();
+    const cpf = card.querySelector('strong').nextSibling.textContent.toLowerCase();
+    if(nome.includes(filtro) || cpf.includes(filtro)){
+      card.style.display = '';
+    } else {
+      card.style.display = 'none';
+    }
+  });
 });
 
-// Dashboard
-function atualizarDashboard() {
-    atendimentosGerais = [];
-    perfis.forEach(p => atendimentosGerais.push(...p.atendimentos));
+/* ---------------------------
+   📌 Dashboard de atendimentos
+---------------------------- */
+const totalAtendimentosElem = document.getElementById('totalAtendimentos');
+const filtroBtns = document.querySelectorAll('.filtro-periodo');
+let graficoLocal, graficoMotivo;
 
-    const periodo = document.querySelector('.filtro-periodo.active')?.dataset.periodo || 'total';
-    let filtrados = filtrarPorPeriodo(atendimentosGerais, periodo);
+async function carregarDashboard(periodo='total') {
+  const snapshot = await db.collection('perfis').get();
+  let todosAtendimentos = [];
+  snapshot.forEach(doc => {
+    const perf = doc.data();
+    if(perf.atendimentos) todosAtendimentos.push(...perf.atendimentos);
+  });
 
-    // Total geral
-    totalAtendimentosSpan.textContent = filtrados.length;
+  const agora = new Date();
+  let atendimentosFiltrados = todosAtendimentos.filter(a=>{
+    const data = new Date(a.data);
+    if(periodo==='dia') return data.toDateString() === agora.toDateString();
+    if(periodo==='semana') {
+      const diff = (agora - data)/(1000*60*60*24);
+      return diff <=7;
+    }
+    if(periodo==='mes') return data.getMonth() === agora.getMonth() && data.getFullYear()===agora.getFullYear();
+    return true;
+  });
 
-    // Quantidade por local
-    const qtdPorLocal = locais.map(local => filtrados.filter(a => a.local===local).length);
+  totalAtendimentosElem.textContent = atendimentosFiltrados.length;
 
-    if(chartLocal) chartLocal.destroy();
-    chartLocal = new Chart(ctxLocal, {
-        type:'bar',
-        data:{
-            labels:locais,
-            datasets:[{
-                label:'Atendimentos por Local',
-                data:qtdPorLocal,
-                backgroundColor:['#2e5a86','#5dade2','#85c1e9','#1abc9c']
-            }]
-        },
-        options:{
-            responsive:true,
-            plugins:{ legend:{ display:true } },
-            scales:{ y:{ beginAtZero:true, precision:0 } }
-        }
-    });
+  // Atendimentos por local
+  const locaisCount = {};
+  atendimentosFiltrados.forEach(a=>locaisCount[a.local] = (locaisCount[a.local]||0)+1);
+  const labelsLocais = Object.keys(locaisCount);
+  const dataLocais = Object.values(locaisCount);
 
-    // Quantidade por motivo/diagnóstico
-    const motivosMap = {};
-    filtrados.forEach(a=>{
-        let motivo = a.local==='CREAS' ? 'Diagnóstico' : a.motivo;
-        motivosMap[motivo] = (motivosMap[motivo]||0)+1;
-    });
-    const motivosLabels = Object.keys(motivosMap);
-    const motivosData = Object.values(motivosMap);
+  if(graficoLocal) graficoLocal.destroy();
+  graficoLocal = new Chart(document.getElementById('graficoLocal'), {
+    type: 'bar',
+    data: { labels: labelsLocais, datasets:[{label:'Atendimentos', data:dataLocais, backgroundColor:'#2e5a86'}]},
+    options: { responsive:true, plugins:{legend:{display:false}}, indexAxis:'y' }
+  });
 
-    if(chartMotivo) chartMotivo.destroy();
-    chartMotivo = new Chart(ctxMotivo, {
-        type:'bar',
-        data:{
-            labels:motivosLabels,
-            datasets:[{
-                label:'Atendimentos por Motivo',
-                data:motivosData,
-                backgroundColor:'#2e86c1'
-            }]
-        },
-        options:{
-            indexAxis:'y',
-            responsive:true,
-            plugins:{ legend:{ display:true } },
-            scales:{ x:{ beginAtZero:true, precision:0 } }
-        }
-    });
+  // Atendimentos por motivo
+  const motivoCount = {};
+  atendimentosFiltrados.forEach(a=>motivoCount[a.motivo] = (motivoCount[a.motivo]||0)+1);
+  const labelsMotivo = Object.keys(motivoCount);
+  const dataMotivo = Object.values(motivoCount);
+
+  if(graficoMotivo) graficoMotivo.destroy();
+  graficoMotivo = new Chart(document.getElementById('graficoMotivo'), {
+    type: 'bar',
+    data: { labels: labelsMotivo, datasets:[{label:'Atendimentos', data:dataMotivo, backgroundColor:'#2e5a86'}]},
+    options: { responsive:true, plugins:{legend:{display:false}}, indexAxis:'y' } // horizontal
+  });
 }
 
-// Filtrar período
-function filtrarPorPeriodo(atendimentos, periodo){
-    const agora = new Date();
-    if(periodo==='dia') return atendimentos.filter(a => new Date(a.data).toDateString()===agora.toDateString());
-    if(periodo==='semana'){
-        const inicioSemana = new Date(agora); inicioSemana.setDate(agora.getDate()-agora.getDay());
-        const fimSemana = new Date(inicioSemana); fimSemana.setDate(inicioSemana.getDate()+6);
-        return atendimentos.filter(a=>{
-            const d = new Date(a.data);
-            return d>=inicioSemana && d<=fimSemana;
-        });
-    }
-    if(periodo==='mes'){
-        const mes = agora.getMonth()+1;
-        const ano = agora.getFullYear();
-        return atendimentos.filter(a=>{
-            const d = new Date(a.data);
-            return (d.getMonth()+1)===mes && d.getFullYear()===ano;
-        });
-    }
-    return atendimentos; // total
-}
-
-// Filtro período
-filtroPeriodoBtns.forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-        filtroPeriodoBtns.forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        atualizarDashboard();
-    });
+/* ---------------------------
+   📌 Filtros de período
+---------------------------- */
+filtroBtns.forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    filtroBtns.forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    carregarDashboard(btn.dataset.periodo);
+  });
 });
 
-// Inicialização
+/* ---------------------------
+   📌 Inicialização
+---------------------------- */
 carregarPerfis();
+carregarDashboard(); 
