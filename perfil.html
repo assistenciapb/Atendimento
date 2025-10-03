@@ -5,8 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfis Atendidos</title>
     <link rel="stylesheet" href="perfil.css">
+
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -14,7 +19,10 @@
         <h1>Perfis Atendidos</h1>
         <div style="display:flex; gap:12px; align-items:center;">
             <input type="text" id="searchPerfil" placeholder="Buscar por nome ou CPF">
-            <button onclick="document.getElementById('dashboardContainer').scrollIntoView({behavior:'smooth'})" style="padding:6px 12px; border-radius:6px; border:none; background:#2e5a86; color:#fff; cursor:pointer;">Dashboard</button>
+            <button onclick="document.getElementById('dashboardContainer').scrollIntoView({behavior:'smooth'})" 
+                    style="padding:6px 12px; border-radius:6px; border:none; background:#2e5a86; color:#fff; cursor:pointer;">
+                Dashboard
+            </button>
         </div>
     </header>
 
@@ -67,6 +75,7 @@
         </div>
     </div>
 
+    <!-- Script principal -->
     <script src="perfil.js"></script>
 </body>
 </html>
